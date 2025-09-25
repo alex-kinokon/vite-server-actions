@@ -1,0 +1,61 @@
+{
+  "name": "@aet/server-actions",
+  "type": "module",
+  "version": "0.0.1-beta.1",
+  "private": true,
+  "description": "",
+  "author": "alex-kinokon",
+  "license": "MIT",
+  "keywords": [
+    "vite"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsdown; node --experimental-transform-types ./scripts/build-pkg-json.ts; cp README.md dist",
+    "build:sample": "vite build",
+    "dev": "vite",
+    "pub": "cd dist && npm publish --scope=public --tag beta"
+  },
+  "peerDependencies": {
+    "@hono/node-server": "^1.19.1",
+    "hono": "^4.9.6",
+    "vite": "^7.1.4"
+  },
+  "dependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/generator": "^7.28.3",
+    "body-parser": "^2.2.0",
+    "devalue": "^5.3.2",
+    "esbuild": "^0.25.10"
+  },
+  "devDependencies": {
+    "@aet/eslint-rules": "^2.0.92",
+    "@aet/server-actions": "file:./dist",
+    "@hono/node-server": "^1.19.4",
+    "@hono/vite-dev-server": "^0.21.1",
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__generator": "^7.27.0",
+    "@types/body-parser": "^1.19.6",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.3",
+    "eslint": "^9.36.0",
+    "hono": "^4.9.8",
+    "prettier": "3.6.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tsdown": "0.15.4",
+    "type-fest": "^5.0.1",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "tabWidth": 2,
+    "printWidth": 90,
+    "semi": true,
+    "singleQuote": false,
+    "trailingComma": "es5"
+  }
+}
