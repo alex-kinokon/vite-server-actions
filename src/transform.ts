@@ -5,7 +5,7 @@ import assert from "node:assert";
 
 import { parse, types as t, traverse } from "@babel/core";
 import { generate } from "@babel/generator";
-import type { Plugin } from "vite";
+import { type Plugin, isRunnableDevEnvironment } from "vite";
 
 import { type Config, type RouteMap, isServerAction } from "./utils";
 
@@ -26,11 +26,20 @@ const exportConst = (name: t.Identifier, value: t.Expression) =>
 
 const declObj = t.objectExpression([t.objectProperty(id("__proto__"), t.nullLiteral())]);
 
-export const transform =
-  (config: Config, routeMap: RouteMap): NonNullable<Plugin["transform"]> =>
-  (code, path) => {
+export const transform = (
+  config: Config,
+  routeMap: RouteMap
+): NonNullable<Plugin["transform"]> =>
+  function (code, path) {
     // Only process JavaScript/TypeScript files
     if (!/\.[cm]?[jt]sx?$/.test(path)) {
+      return null;
+    }
+
+    if (
+      isRunnableDevEnvironment(this.environment) ||
+      this.environment.name !== "client"
+    ) {
       return null;
     }
 
@@ -78,6 +87,10 @@ export const transform =
       newBody.push(exportConst(id(main), obj));
     }
 
+    const assertAsync = config.enforceAsync
+      ? (async: boolean) => assert(async, MUST_BE_ASYNC)
+      : () => {};
+
     // Traverse AST to find and transform all exported server actions
     // Replaces original server functions with client-side API callers
     traverse(ast, {
@@ -88,14 +101,14 @@ export const transform =
 
         // Handle: export async function myAction() { ... }
         if (t.isFunctionDeclaration(decl)) {
-          assert(decl.async, MUST_BE_ASYNC);
+          assertAsync(decl.async);
           declareID(decl.id!.name);
         } else if (t.isVariableDeclaration(decl)) {
           for (const { init, id } of decl.declarations) {
             if (t.isIdentifier(id)) {
               // Handle: export const myAction = async () => { ... }
               if (t.isArrowFunctionExpression(init) || t.isFunctionExpression(init)) {
-                assert(init.async, MUST_BE_ASYNC);
+                assertAsync(init.async);
                 declareID(id.name);
               } else if (t.isCallExpression(init)) {
                 // Handle wrapped functions - can't statically verify async
@@ -108,7 +121,7 @@ export const transform =
                     `${prop.type} is not supported.`
                   );
                   if (t.isObjectMethod(prop)) {
-                    assert(prop.async, MUST_BE_ASYNC);
+                    assertAsync(prop.async);
                   }
                   assert(t.isIdentifier(prop.key), NAME_MUST_BE_STATIC);
                   return prop.key.name;

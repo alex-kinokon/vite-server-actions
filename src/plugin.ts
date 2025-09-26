@@ -27,6 +27,7 @@ export default function serverComponents(options?: Partial<Config>): Plugin[] {
     getId: (path, name) => "$" + cyrb53(quote([path, name])),
     suppressErrors: process.env.NODE_ENV === "production",
     serverViteConfig: {},
+    enforceAsync: true,
     ...options,
   };
 
@@ -42,6 +43,7 @@ export default function serverComponents(options?: Partial<Config>): Plugin[] {
     sscHelper.rollupPlugin,
     {
       name: "server-plugin",
+      config: () => ({ environments: { server: {} } }),
       configResolved: viteConfig => {
         vite = viteConfig;
       },

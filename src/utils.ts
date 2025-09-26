@@ -47,6 +47,12 @@ export interface Config {
    * Reducer argument to pass to `devalue.stringify`.
    */
   stringifyReducers?: DevalueReducers;
+
+  /**
+   * Throw an error if an error handler is not an async function.
+   * @default true
+   */
+  enforceAsync: boolean;
 }
 
 // Maps action hashes to their source file paths and function names

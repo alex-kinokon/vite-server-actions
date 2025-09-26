@@ -12,9 +12,11 @@ export function useRequest(): Request {
 /**
  * @internal
  */
-export let setRequestStorage = (request: typeof requestStorage) => {
+export let setRequestStorage: ((request: typeof requestStorage) => void) | null = (
+  request: typeof requestStorage
+) => {
   requestStorage = request;
-  setRequestStorage = null!;
+  setRequestStorage = null;
 };
 
 let handlerContext: AsyncLocalStorage<unknown> | undefined;

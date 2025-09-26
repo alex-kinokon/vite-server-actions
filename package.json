@@ -1,7 +1,7 @@
 {
   "name": "@aet/server-actions",
   "type": "module",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.1-beta.4",
   "private": true,
   "description": "",
   "author": "alex-kinokon",
@@ -33,6 +33,7 @@
     "@aet/server-actions": "file:./dist",
     "@hono/node-server": "^1.19.4",
     "@hono/vite-dev-server": "^0.21.1",
+    "@rollup/plugin-babel": "^6.0.4",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.27.0",
     "@types/body-parser": "^1.19.6",

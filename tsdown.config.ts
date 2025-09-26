@@ -2,11 +2,13 @@ import fs from "node:fs/promises";
 import { builtinModules } from "node:module";
 import { extname, resolve } from "node:path";
 
+import { babel } from "@rollup/plugin-babel";
 import { type Loader, transformSync } from "esbuild";
 import type { Plugin as RollupPlugin } from "rollup";
 import { defineConfig } from "tsdown";
 
 import pkg from "./package.json" with { type: "json" };
+import jsdocPlugin from "./scripts/jsdoc.ts";
 
 const externals = Object.keys(pkg.dependencies)
   .concat(Object.keys(pkg.peerDependencies))
@@ -21,7 +23,18 @@ export default defineConfig({
   clean: true,
   tsconfig: "./tsconfig.build.json",
   dts: true,
-  plugins: [inlineImportPlugin()],
+  plugins: [
+    inlineImportPlugin(),
+    babel({
+      babelHelpers: "bundled",
+      extensions: [".ts"],
+      plugins: [jsdocPlugin],
+      parserOpts: {
+        plugins: ["typescript"],
+      },
+    }),
+  ],
+  sourcemap: true,
   define: {
     "process.env.PKG_NAME": JSON.stringify(pkg.name),
   },

@@ -1,6 +1,6 @@
 // Development mode server - handles server actions through Vite middleware
 // Uses SSR module loading to execute server functions directly during development
-
+import assert from "node:assert";
 import { AsyncLocalStorage } from "node:async_hooks";
 import fs from "node:fs";
 import type { IncomingMessage } from "node:http";
@@ -9,7 +9,7 @@ import { TLSSocket } from "node:tls";
 
 import bodyParser from "body-parser";
 import * as devalue from "devalue";
-import type { Plugin } from "vite";
+import { type Plugin, isRunnableDevEnvironment } from "vite";
 
 import { getRequest } from "./node";
 import { type Config, PKG_NAME, type RouteMap, isServerAction, quote } from "./utils";
@@ -18,18 +18,21 @@ export const configureServer =
   (config: Config, routeMap: RouteMap): NonNullable<Plugin["configureServer"]> =>
   async devServer => {
     const { apiRoute, suppressErrors, parseRevivers, stringifyReducers } = config;
-    const { watcher, middlewares, ssrLoadModule, ssrFixStacktrace, restart } = devServer;
+    const { watcher, middlewares, ssrFixStacktrace, restart, environments } = devServer;
+
+    const serverEnvironment = environments.server;
+    assert(isRunnableDevEnvironment(serverEnvironment));
 
     // Hot reload handler - restarts dev server when server action files change
     // Necessary because route mappings need to be regenerated
-    const onReload = (file: string) => {
+    function onReload(file: string) {
       const content = fs.readFileSync(file, "utf-8");
       if (isServerAction(content)) {
         watcher.off("add", onReload);
         watcher.off("change", onReload);
         void restart(/* forceOptimize */ true);
       }
-    };
+    }
 
     watcher.on("add", onReload);
     watcher.on("change", onReload);
@@ -43,16 +46,17 @@ export const configureServer =
     );
 
     const storage = new AsyncLocalStorage<Request>();
-    const runtime = (await ssrLoadModule(PKG_NAME)) as typeof import("./index");
-    runtime.setRequestStorage(storage);
+    const runtime: typeof import("./index") =
+      await serverEnvironment.runner.import(PKG_NAME);
+    runtime.setRequestStorage!(storage);
 
     middlewares.use(
       apiRoute,
       async (req: IncomingMessage & { body?: string }, res, next) => {
-        const userError = (devMsg: string, code = 400) => {
+        function userError(devMsg: string, code = 400) {
           res.statusCode = code;
           next(new Error(devMsg));
-        };
+        }
 
         try {
           if (typeof req.body !== "string") {
@@ -77,9 +81,7 @@ export const configureServer =
 
           // Load the server-side module containing the actual function
           const { path, name } = routeMap.get(id)!;
-          const module = await ssrLoadModule(path + "?server", {
-            fixStacktrace: true,
-          });
+          const module = await serverEnvironment.runner.import(path + "?server");
 
           // Navigate to the specific function (handles nested object paths)
           let handler = module;
