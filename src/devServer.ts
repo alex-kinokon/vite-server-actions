@@ -17,7 +17,8 @@ import { type Config, PKG_NAME, type RouteMap, isServerAction, quote } from "./u
 export const configureServer =
   (config: Config, routeMap: RouteMap): NonNullable<Plugin["configureServer"]> =>
   async devServer => {
-    const { apiRoute, suppressErrors, parseRevivers, stringifyReducers } = config;
+    const { apiRoute, suppressErrors, parseRevivers, stringifyReducers, bodySizeLimit } =
+      config;
     const { watcher, middlewares, ssrFixStacktrace, restart, environments } = devServer;
 
     const serverEnvironment = environments.server;
@@ -42,6 +43,7 @@ export const configureServer =
       apiRoute,
       bodyParser.text({
         type: "application/json",
+        limit: bodySizeLimit,
       })
     );
 

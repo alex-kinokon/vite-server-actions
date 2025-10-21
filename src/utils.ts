@@ -53,6 +53,13 @@ export interface Config {
    * @default true
    */
   enforceAsync: boolean;
+
+  /**
+   * Controls the maximum request body size. If this is a number,
+   * then the value specifies the number of bytes; if it is a string,
+   * the value is passed to the bytes library for parsing. Defaults to '100kb'.
+   */
+  bodySizeLimit?: number | string | undefined;
 }
 
 // Maps action hashes to their source file paths and function names
